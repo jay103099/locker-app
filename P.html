@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locker Manager Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .login-container, .main-container { display: none; padding: 20px; }
+    .visible { display: block; }
+    .form-box { max-width: 400px; margin: auto; padding: 20px; background: #f7f7f7; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input[type="number"] { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
+    button { padding: 10px 20px; background: #2b6cb0; color: white; border: none; margin-top: 10px; font-size: 16px; width: 100%; border-radius: 5px; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin-top: 20px; }
+    .locker { padding: 6px; border-radius: 6px; text-align: center; font-size: 13px; border: 1px solid #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background-color: #c6f6d5; }
+    .booking { background-color: #fefcbf; }
+    .rented { background-color: #feb2b2; }
+    .summary-box { padding: 10px; border: 1px solid #ccc; border-radius: 8px; width: 150px; text-align: center; background: white; }
+    .summary { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>  <div class="login-container visible" id="loginContainer">
+    <div class="form-box">
+      <h2>Employee Login</h2>
+      <label for="employeeId">Enter 4-digit Employee ID:</label>
+      <input type="number" id="employeeId" maxlength="4">
+      <button onclick="login()">Login</button>
+    </div>
+  </div>  <div class="main-container" id="mainContainer">
+    <h1>Locker Manager</h1>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search by name or contact" oninput="renderLockers()">
+      <select id="filter" onchange="renderLockers()">
+        <option value="all">All Types</option>
+        <option value="D">Type D</option>
+        <option value="F">Type F</option>
+        <option value="L">Type L</option>
+      </select>
+    </div><div class="summary" id="summary"></div>
+<div class="grid" id="lockerGrid"></div>
+
+  </div>  <script>
+    const EMPLOYEE_ID_LENGTH = 4;
+    const lockerGrid = document.getElementById('lockerGrid');
+    const summaryEl = document.getElementById('summary');
+
+    const lockers = Array.from({ length: 510 }, (_, i) => {
+      const id = 1561 + i;
+      let type = id <= 1760 ? 'D' : id <= 1970 ? 'F' : 'L';
+      return { id, type, status: 'vacant', user: '', contact: '', bookingDate: '' };
+    });
+
+    function login() {
+      const input = document.getElementById('employeeId').value;
+      if (/^\d{4}$/.test(input)) {
+        document.getElementById('loginContainer').classList.remove('visible');
+        document.getElementById('mainContainer').classList.add('visible');
+        renderLockers();
+      } else {
+        alert('Please enter a valid 4-digit ID');
+      }
+    }
+
+    function renderLockers() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filter = document.getElementById('filter').value;
+      const counts = { D: { vacant: 0, booking: 0, rented: 0 }, F: { vacant: 0, booking: 0, rented: 0 }, L: { vacant: 0, booking: 0, rented: 0 } };
+      lockerGrid.innerHTML = '';
+
+      lockers.filter(l => {
+        return (filter === 'all' || l.type === filter) && (l.user.toLowerCase().includes(search) || l.contact.includes(search));
+      }).forEach(locker => {
+        const div = document.createElement('div');
+        div.className = `locker ${locker.status}`;
+        div.innerHTML = `${locker.id}<br>${locker.type}<br>${locker.user}<br>${locker.contact}<br>${locker.bookingDate}`;
+        lockerGrid.appendChild(div);
+        counts[locker.type][locker.status]++;
+      });
+
+      summaryEl.innerHTML = '';
+      Object.keys(counts).forEach(type => {
+        const box = document.createElement('div');
+        box.className = 'summary-box';
+        box.innerHTML = `<strong>Type ${type}</strong><br>Vacant: ${counts[type].vacant}<br>Booked: ${counts[type].booking}<br>Rented: ${counts[type].rented}`;
+        summaryEl.appendChild(box);
+      });
+    }
+  </script></body>
+</html>
